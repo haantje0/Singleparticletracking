@@ -156,6 +156,7 @@ def test_locations(file_path, psize, minmass, frame = 0):
     file_path : Dataframe with single "save" and "get" paths.
     psize : Integer, particle size. Has to be an odd number.
     minmass : Integer, Trackpy measure to identify particles.
+    frame : Integer, which frame to use as testframe.
 
     Returns
     -------
