@@ -147,7 +147,7 @@ There is also an option to change the maximum lag time for the calculation. This
 spt.get_msd(trajectories, frames, path['save'], max_lagtime=5)
 ```
 
-###### Notes
+### Notes
 When you use the singleparticletracking package, it is important to check all your data by hand. Always check if all particles are evaluated and if all evaluated particles are correct. It is very much possible that aggregated particles are also taken into account, while you might not want them to be. Also very fast particles might be overlooked if your exp max is too low. Therefor always compare your trajectories, videos, velocity distributions and mean square displacements, to identify problems.
 If problems occur and you want to manually remove particles from your trajectories, you can use the remove trajectories() function. This function takes your trajectories dataframe and removes the particles which are numbered in a remove list. It returns the new trajectories, without the erroneous particles. 
 
