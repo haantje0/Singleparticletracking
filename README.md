@@ -56,3 +56,112 @@ In your new folders you can find the graphs that the test locations() function h
 <img src="https://github.com/haantje0/Singleparticletracking/blob/main/docs/test_frame.png" width="400"/>
 <img src="https://github.com/haantje0/Singleparticletracking/blob/main/docs/test_hist.png" width="400"/>
 
+```
+for index, path in paths.iterrows():
+  spt.create_folder(path['save'])
+  spt.test_locations(path, psize, 10000)
+```
+
+The new test frame and test hist graphs show that for this minmass the correct particles are recognized! If changing the minmass variable, does not give you the correct particle recognition, you should check if your psize is correct.
+
+<img src="https://github.com/haantje0/Singleparticletracking/blob/main/docs/test_frame2.png" width="400"/>
+<img src="https://github.com/haantje0/Singleparticletracking/blob/main/docs/test_hist2.png" width="400"/>
+
+### Step 2: Particle tracking
+Now that the particles are identified correctly, we can track them over the length of the whole video. This is done with the locate particles() function. This function returns three variables:
+1. frames. Which behaves like a numpy array, containing all the video frames and additional functionality:
+  - frames.metadata gives a dataframe with additional data such as frame rate, pixel to micron conversion rate and the dimensions of the video.
+  - frames[123].frame no returns the frame number (in this case 123).
+  - frames[123].metadata gives additional data from a single video frame, such as its time step.
+2. particles. A dataframe containing all single particles from every frame, with their location, frame number and additional information.
+3. trajectories. A dataframe containing all trajectories. In this dataframe each particle has its own number, that stays the same over multiple frames. Particles that do not form coherent trajectories are filtered out.
+
+```
+for index, path in paths.iterrows():
+  '''
+  ...
+  '''
+  frames, particles, trajectories = spt.locate_particles(path, exp_max, psize, minmass)
+```
+
+### Step 3: Data analysis
+With the frames, particles and trajectories data ready, the trajectories can be analysed and visualized. There are three different functions for the analysis:
+- plot trajectories(), for the visualization of the trajectories.
+- get velocity distribution(), for the calculation of the velocity distribution.
+- get msd(), for the calculation of the mean square displacement.
+
+###### plot_trajectories()
+```
+for index, path in paths.iterrows():
+  '''
+  ...
+  '''
+  frames, particles, trajectories = spt.locate_particles(path, exp_max, psize, minmass)
+
+  spt.plot_trajectories(trajectories, frames, particles, path['save'])
+```
+
+The trajectories are plotted in two graphs (one numbered and one not). Also two mp4 movies are created. One is just an mp4 version of the ND2 file and the other shows the developing trajectories.
+
+###### get_velocity_distribution()
+```
+for index, path in paths.iterrows():
+  '''
+  ...
+  '''
+  frames, particles, trajectories = spt.locate_particles(path, exp_max, psize, minmass)
+  
+  spt.get_velocity_distribution(trajectories, frames.metadata['calibration_um'], exp_max, path['save'])
+```
+
+The instantaneous velocity distributions are calculated and visualized for each particle individually and for all particles together (per movie). ’calibration um’ Is one of the additional information entries stored in the metadata of frames. This entry gives the micron per pixel calibration value. When you use Tiff files, the micron per pixel value has to be entered manually.
+
+###### get_msd()
+```
+for index, path in paths.iterrows():
+  '''
+  ...
+  '''
+  frames, particles, trajectories = spt.locate_particles(path, exp_max, psize, minmass)
+  
+  spt.get_msd(trajectories, frames, path['save'])
+```
+
+The mean square displacement is calculated and visualized.
+When particles move very fast, they often do not stay in the video frame for long enough to generate a full MSD curve. Therefore, there are four different filters for the ensamble mean square displacement, which are designed to filter out in an efficient or non-biased way. The ”mean” filter is set on default, because it works best for active particles. If you want to use another filter, you can do that by changing the EMSD variable in the get msd() function:
+
+```
+# Use no filter / use all particles
+spt.get_msd(trajectories, frames, path['save'], EMSD="emsd")
+
+# Use the full trajectories filter
+spt.get_msd(trajectories, frames, path['save'], EMSD="ft")
+
+# Use the video frame subsection filter
+spt.get_msd(trajectories, frames, path['save'], EMSD="frame")
+```
+
+There is also an option to change the maximum lag time for the calculation. This variable (max lagtime) has a default value of 10 seconds, but other values can be given to the function.
+
+```
+spt.get_msd(trajectories, frames, path['save'], max_lagtime=5)
+```
+
+###### Notes
+When you use the singleparticletracking package, it is important to check all your data by hand. Always check if all particles are evaluated and if all evaluated particles are correct. It is very much possible that aggregated particles are also taken into account, while you might not want them to be. Also very fast particles might be overlooked if your exp max is too low. Therefor always compare your trajectories, videos, velocity distributions and mean square displacements, to identify problems.
+If problems occur and you want to manually remove particles from your trajectories, you can use the remove trajectories() function. This function takes your trajectories dataframe and removes the particles which are numbered in a remove list. It returns the new trajectories, without the erroneous particles. 
+
+```
+for index, path in paths.iterrows():
+  '''
+  ...
+  '''
+  frames, particles, trajectories = spt.locate_particles(path, exp_max, psize, minmass)
+
+  remove = [2,5,18]
+  remove_trajectories(trajectories, remove)
+
+  '''
+  Your analysis functions
+  '''
+```
